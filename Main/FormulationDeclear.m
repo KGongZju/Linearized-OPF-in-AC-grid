@@ -2,97 +2,97 @@ function [PostiveBranchFlow,ReactiveBranchFlow,NodeVoltageS,DNodeVoltageS,NodeTh
           FormulationDeclear(IniPostiveBranchFlow,IniReactiveBranchFlow,NodeIniVoltage,NodeIniTheta,DNodeIniVoltage)
 
       
-DNodeIniVoltage=0; %ÍØÕ¹Êı¾İ½Ó¿Ú£¬Ôİ²»ÓÃ
-DNodeVoltageS=0;   %ÍØÕ¹Êı¾İ½Ó¿Ú£¬Ôİ²»ÓÃ
-DBatteryCh=0;      %ÍØÕ¹Êı¾İ½Ó¿Ú£¬Ôİ²»ÓÃ
-DBatteryDc=0;      %ÍØÕ¹Êı¾İ½Ó¿Ú£¬Ôİ²»ÓÃ
-VIMultiDVI=0;      %ÍØÕ¹Êı¾İ½Ó¿Ú£¬Ôİ²»ÓÃ
+DNodeIniVoltage=0; %æ‹“å±•æ•°æ®æ¥å£ï¼Œæš‚ä¸ç”¨
+DNodeVoltageS=0;   %æ‹“å±•æ•°æ®æ¥å£ï¼Œæš‚ä¸ç”¨
+DBatteryCh=0;      %æ‹“å±•æ•°æ®æ¥å£ï¼Œæš‚ä¸ç”¨
+DBatteryDc=0;      %æ‹“å±•æ•°æ®æ¥å£ï¼Œæš‚ä¸ç”¨
+VIMultiDVI=0;      %æ‹“å±•æ•°æ®æ¥å£ï¼Œæš‚ä¸ç”¨
 
-[Busdata,Gendata,branchdata,Gencostdata]=Data(); %¶ÁÈ¡µçÍøÊı¾İ
+[Busdata,Gendata,branchdata,Gencostdata]=Data(); %è¯»å–ç”µç½‘æ•°æ®
 LineI=branchdata(:,1);
 LineJ=branchdata(:,2);
 LineNum=length(LineI);
-% ½ÚµãĞÅÏ¢
+% èŠ‚ç‚¹ä¿¡æ¯
 NodeI=Busdata(:,1);
 NodeNum=length(NodeI);
-% ·¢µç»úĞÅÏ¢
+% å‘ç”µæœºä¿¡æ¯
 GenI=Gendata(:,1);
 GenNum=length(GenI);
 
 
-%% OPF»ù´¡ÉùÃ÷±äÁ¿
-% Ö§Â·ÓĞ¹¦±äÁ¿ÉùÃ÷£¬²ÉÓÃsparseÏ¡Êè¾ØÕóĞÎÊ½£¬·½±ãcoding
+%% OPFåŸºç¡€å£°æ˜å˜é‡
+% æ”¯è·¯æœ‰åŠŸå˜é‡å£°æ˜ï¼Œé‡‡ç”¨sparseç¨€ç–çŸ©é˜µå½¢å¼ï¼Œæ–¹ä¾¿coding
 PositiveBFvarible=sdpvar(LineNum,1);
 PostiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[PositiveBFvarible;-PositiveBFvarible],NodeNum,NodeNum);
 
-% Ö§Â·ÎŞ¹¦±äÁ¿ÉùÃ÷£¬²ÉÓÃsparseÏ¡Êè¾ØÕóĞÎÊ½£¬·½±ãcoding
+% æ”¯è·¯æ— åŠŸå˜é‡å£°æ˜ï¼Œé‡‡ç”¨sparseç¨€ç–çŸ©é˜µå½¢å¼ï¼Œæ–¹ä¾¿coding
 ReactiveBFvarible=sdpvar(LineNum,1);
 ReactiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[ReactiveBFvarible;-ReactiveBFvarible],NodeNum,NodeNum);
 
-% ½ÚµãµçÑ¹Æ½·½±äÁ¿ÉùÃ÷
+% èŠ‚ç‚¹ç”µå‹å¹³æ–¹å˜é‡å£°æ˜
 NodeVoltageS=sdpvar(NodeNum,1);
 
-% ½ÚµãÏà½Ç±äÁ¿ÉùÃ÷
+% èŠ‚ç‚¹ç›¸è§’å˜é‡å£°æ˜
 NodeTheta=sdpvar(NodeNum,1);
 
-% ÉùÃ÷·¢µç»úÓĞ¹¦³öÁ¦±äÁ¿
+% å£°æ˜å‘ç”µæœºæœ‰åŠŸå‡ºåŠ›å˜é‡
 UnitP=sdpvar(GenNum,1);
 OperationIF1=binvar(GenNum,1);
 OperationIF2=binvar(GenNum,1);
 GenOutP=sparse(GenI,ones(1,length(GenI)),UnitP,NodeNum);
 
-% ÉùÃ÷·¢µç»úÎŞ¹¦³öÁ¦±äÁ¿
+% å£°æ˜å‘ç”µæœºæ— åŠŸå‡ºåŠ›å˜é‡
 UnitQ=sdpvar(GenNum,1);
 GenOutQ=sparse(GenI,ones(1,length(GenI)),UnitQ,NodeNum);
 
-%% »ùÓÚ´«Í³OPF»ù´¡ÉÏ£¬¶Ô´¢ÄÜÑ¡Ö·¶¨Èİ±äÁ¿½øĞĞÉùÃ÷
+%% åŸºäºä¼ ç»ŸOPFåŸºç¡€ä¸Šï¼Œå¯¹å‚¨èƒ½é€‰å€å®šå®¹å˜é‡è¿›è¡Œå£°æ˜
 InstallLocation=binvar(NodeNum,1);
 InstallCapacity=sdpvar(NodeNum,1);
 InstallPowerrating=sdpvar(NodeNum,1);
 
-BatteryDc=sdpvar(NodeNum,1); %µç³Ø·Åµç±äÁ¿
-BatteryCh=sdpvar(NodeNum,1); %µç³Ø³äµç±äÁ¿
-BatteryIF=binvar(NodeNum,1); %²¢Íøµç³ØµÄ³äµç×´Ì¬Ô¼Êø
+BatteryDc=sdpvar(NodeNum,1); %ç”µæ± æ”¾ç”µå˜é‡
+BatteryCh=sdpvar(NodeNum,1); %ç”µæ± å……ç”µå˜é‡
+BatteryIF=binvar(NodeNum,1); %å¹¶ç½‘ç”µæ± çš„å……ç”µçŠ¶æ€çº¦æŸ
 
-%% ·¢µç»ú×éÔ¼Êø¼¯
+%% å‘ç”µæœºç»„çº¦æŸé›†
 AGV1=sdpvar(GenNum,1); % anxillary generator varible +
 AGV2=sdpvar(GenNum,1); % anxillary generator varible -
 
-% %% *********¹ÊÕÏÔËĞĞ×´Ì¬*********
+% %% *********æ•…éšœè¿è¡ŒçŠ¶æ€*********
 % DPositiveBFvarible=sdpvar(LineNum,1);
 % DPostiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[DPositiveBFvarible;-DPositiveBFvarible],NodeNum,NodeNum);
 % DReactiveBFvarible=sdpvar(LineNum,1);
 % DReactiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[DReactiveBFvarible;-DReactiveBFvarible],NodeNum,NodeNum);
 
-% % ÏµÍ³ÆµÂÊ±ä»¯
+% % ç³»ç»Ÿé¢‘ç‡å˜åŒ–
 % DeltaF=sdpvar(1,1);
 
-% % ¹ÊÕÏ×´Ì¬½ÚµãµçÑ¹Æ½·½±äÁ¿ÉùÃ÷ Ê××ÖÄ¸D±íÊ¾delta£¬±íÊ¾±ä»¯Á¿
+% % æ•…éšœçŠ¶æ€èŠ‚ç‚¹ç”µå‹å¹³æ–¹å˜é‡å£°æ˜ é¦–å­—æ¯Dè¡¨ç¤ºdeltaï¼Œè¡¨ç¤ºå˜åŒ–é‡
 % DNodeVoltageS=sdpvar(NodeNum,1);
 
-% % ¹ÊÕÏ×´Ì¬½ÚµãÏà½Ç±äÁ¿ÉùÃ÷
+% % æ•…éšœçŠ¶æ€èŠ‚ç‚¹ç›¸è§’å˜é‡å£°æ˜
 % DNodeTheta=sdpvar(NodeNum,1);
 
-% % ÓĞ¹¦Ë¦¸ººÉ
+% % æœ‰åŠŸç”©è´Ÿè·
 % CurtailP=sdpvar(NodeNum,1);
 
-% % ÎŞ¹¦Ë¦¸ººÉ
+% % æ— åŠŸç”©è´Ÿè·
 % CurtailQ=sdpvar(NodeNum,1);
 
-% % ÉùÃ÷·¢µç»ú¹ÊÕÏÓĞ¹¦³öÁ¦±ä»¯Á¿
+% % å£°æ˜å‘ç”µæœºæ•…éšœæœ‰åŠŸå‡ºåŠ›å˜åŒ–é‡
 % DUnitP=sdpvar(GenNum,1);
 % DGenOutP=sparse(GenI,ones(1,length(GenI)),DUnitP,NodeNum);
 
-% % µç³Ø³ä·Åµç±ä»¯Á¿ÉùÃ÷
-% DBatteryDc=sdpvar(NodeNum,1); %µç³Ø·Åµç±äÁ¿
-% DBatteryCh=sdpvar(NodeNum,1); %µç³Ø³äµç±äÁ¿
+% % ç”µæ± å……æ”¾ç”µå˜åŒ–é‡å£°æ˜
+% DBatteryDc=sdpvar(NodeNum,1); %ç”µæ± æ”¾ç”µå˜é‡
+% DBatteryCh=sdpvar(NodeNum,1); %ç”µæ± å……ç”µå˜é‡
 
 % DNodePl=sdpvar(NodeNum,1);
 % DNodeQl=sdpvar(NodeNum,1);
 
-% %µçÑ¹±ä»¯Á¿
+% %ç”µå‹å˜åŒ–é‡
 % VIMultiDVI=zeros(NodeNum,1);
-%% µ÷ÓÃ¹¹Ôìº¯Êı
+%% è°ƒç”¨æ„é€ å‡½æ•°
 % IniPostiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[ones(LineNum,1);-ones(LineNum,1)],NodeNum,NodeNum);
 % IniReactiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[zeros(LineNum,1);zeros(LineNum,1)],NodeNum,NodeNum);
 % NodeIniVoltage=ones(NodeNum,1);
