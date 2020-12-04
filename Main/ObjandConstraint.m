@@ -5,10 +5,10 @@ function [Constraints,Obj1,Obj2,Obj3,PostiveBranchFlow,ReactiveBranchFlow]...
                          BatteryDc,BatteryCh,BatteryIF,...
                          AGV1,AGV2,NodeIniVoltage,NodeIniTheta)
                                            
-[Busdata,Gendata,branchdata,Gencostdata]=Data(); %¶ÁÈ¡µçÍøÊı¾İ
+[Busdata,Gendata,branchdata,Gencostdata]=Data(); %è¯»å–ç”µç½‘æ•°æ®
 
 
-% ÏßÂ·ĞÅÏ¢
+% çº¿è·¯ä¿¡æ¯
 LineI=branchdata(:,1);
 LineJ=branchdata(:,2);
 LineR=branchdata(:,3);
@@ -16,12 +16,12 @@ LineX=branchdata(:,4);
 LineB=branchdata(:,5);
 LineNum=length(LineI);
 
-% ½ÚµãĞÅÏ¢
+% èŠ‚ç‚¹ä¿¡æ¯
 NodeI=Busdata(:,1);
 NodePl=Busdata(:,3)/100;
 NodeQl=Busdata(:,4)/100;
 NodeNum=length(NodeI);
-% ·¢µç»úĞÅÏ¢
+% å‘ç”µæœºä¿¡æ¯
 GenI=Gendata(:,1);
 GenNum=length(GenI);
 GenPmin=Gendata(:,10)/100;
@@ -34,85 +34,85 @@ GenA=Gencostdata(:,5);
 
 
 
-%% OPF»ù´¡ÉùÃ÷±äÁ¿
-% Ö§Â·ÓĞ¹¦±äÁ¿ÉùÃ÷£¬²ÉÓÃsparseÏ¡Êè¾ØÕóĞÎÊ½£¬·½±ãcoding
+%% OPFåŸºç¡€å£°æ˜å˜é‡
+% æ”¯è·¯æœ‰åŠŸå˜é‡å£°æ˜ï¼Œé‡‡ç”¨sparseç¨€ç–çŸ©é˜µå½¢å¼ï¼Œæ–¹ä¾¿coding
 % PositiveBFvarible=sdpvar(LineNum,1);
 % PostiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[PositiveBFvarible;-PositiveBFvarible],NodeNum,NodeNum);
 % IniPostiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[ones(LineNum,1);-ones(LineNum,1)],NodeNum,NodeNum);
-% Ö§Â·ÎŞ¹¦±äÁ¿ÉùÃ÷£¬²ÉÓÃsparseÏ¡Êè¾ØÕóĞÎÊ½£¬·½±ãcoding
+% æ”¯è·¯æ— åŠŸå˜é‡å£°æ˜ï¼Œé‡‡ç”¨sparseç¨€ç–çŸ©é˜µå½¢å¼ï¼Œæ–¹ä¾¿coding
 % ReactiveBFvarible=sdpvar(LineNum,1);
 % ReactiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[ReactiveBFvarible;-ReactiveBFvarible],NodeNum,NodeNum);
 % IniReactiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[zeros(LineNum,1);zeros(LineNum,1)],NodeNum,NodeNum);
-% ½ÚµãµçÑ¹Æ½·½±äÁ¿ÉùÃ÷
+% èŠ‚ç‚¹ç”µå‹å¹³æ–¹å˜é‡å£°æ˜
 % NodeVoltageS=sdpvar(NodeNum,1);
 % NodeIniVoltage=ones(NodeNum,1);
-% ½ÚµãÏà½Ç±äÁ¿ÉùÃ÷
+% èŠ‚ç‚¹ç›¸è§’å˜é‡å£°æ˜
 % NodeTheta=sdpvar(NodeNum,1);
-% NodeIniTheta=zeros(NodeNum,1); %Ëæµü´ú½øĞĞ¸ü¸Ä
-% ÉùÃ÷·¢µç»úÓĞ¹¦³öÁ¦±äÁ¿
+% NodeIniTheta=zeros(NodeNum,1); %éšè¿­ä»£è¿›è¡Œæ›´æ”¹
+% å£°æ˜å‘ç”µæœºæœ‰åŠŸå‡ºåŠ›å˜é‡
 % UnitP=sdpvar(GenNum,1);
 % OperationIF=binvar(GenNum,1);
 % GenOutP=sparse(GenI,ones(1,length(GenI)),UnitP,NodeNum);
-% ÉùÃ÷·¢µç»úÎŞ¹¦³öÁ¦±äÁ¿
+% å£°æ˜å‘ç”µæœºæ— åŠŸå‡ºåŠ›å˜é‡
 % UnitQ=sdpvar(GenNum,1);
 % GenOutQ=sparse(GenI,ones(1,length(GenI)),UnitQ,NodeNum);
-%% »ùÓÚ´«Í³OPF»ù´¡ÉÏ£¬¶Ô´¢ÄÜÑ¡Ö·¶¨Èİ±äÁ¿½øĞĞÉùÃ÷
+%% åŸºäºä¼ ç»ŸOPFåŸºç¡€ä¸Šï¼Œå¯¹å‚¨èƒ½é€‰å€å®šå®¹å˜é‡è¿›è¡Œå£°æ˜
 % InstallLocation=binvar(NodeNum,1);
 % InstallCapacity=sdpvar(NodeNum,1);
 % InstallPowerrating=sdpvar(NodeNum,1);
-% BatteryDc=sdpvar(NodeNum,1); %µç³Ø·Åµç±äÁ¿
-% BatteryCh=sdpvar(NodeNum,1); %µç³Ø³äµç±äÁ¿
-% BatterySoc=sdpvar(NodeNum,1); %µç³Ø³äµç×´Ì¬
-% BatteryIF=binvar(NodeNum,1); %²¢Íøµç³ØµÄ³äµç×´Ì¬Ô¼Êø
-MaxCapacity=0; % ×î´óĞÂ½¨µç³ØÈİÁ¿
-MaxPowerrating=0; %×î´óĞÂ½¨µç³Ø¶î¶¨ÓĞ¹¦¹¦ÂÊ
-%% ĞÎ³É½Úµãµ¼ÄÉ¾ØÕóYmatrix
+% BatteryDc=sdpvar(NodeNum,1); %ç”µæ± æ”¾ç”µå˜é‡
+% BatteryCh=sdpvar(NodeNum,1); %ç”µæ± å……ç”µå˜é‡
+% BatterySoc=sdpvar(NodeNum,1); %ç”µæ± å……ç”µçŠ¶æ€
+% BatteryIF=binvar(NodeNum,1); %å¹¶ç½‘ç”µæ± çš„å……ç”µçŠ¶æ€çº¦æŸ
+MaxCapacity=0; % æœ€å¤§æ–°å»ºç”µæ± å®¹é‡
+MaxPowerrating=0; %æœ€å¤§æ–°å»ºç”µæ± é¢å®šæœ‰åŠŸåŠŸç‡
+%% å½¢æˆèŠ‚ç‚¹å¯¼çº³çŸ©é˜µYmatrix
 
-% ĞÎ³É½Úµãµ¼ÄÉ¾ØÕóYmatrixµÄ¶Ô½ÇÕó
-LineY=1./(LineR+1i*LineX); % ¼ÆËãÃ¿ÌõÏßÂ·µÄµ¼ÄÉ       
+% å½¢æˆèŠ‚ç‚¹å¯¼çº³çŸ©é˜µYmatrixçš„å¯¹è§’é˜µ
+LineY=1./(LineR+1i*LineX); % è®¡ç®—æ¯æ¡çº¿è·¯çš„å¯¼çº³       
 Y1=sparse([LineI;LineJ],[LineJ;LineI],[-LineY;-LineY],NodeNum,NodeNum);    
-% ĞÎ³É½Úµãµ¼ÄÉ¾ØÕóYmatrixµÄ·Ç¶Ô½ÇÕó
+% å½¢æˆèŠ‚ç‚¹å¯¼çº³çŸ©é˜µYmatrixçš„éå¯¹è§’é˜µ
 Y2=sparse([LineI;LineJ],[LineI;LineJ],[LineY+1i*LineB;LineY+1i*LineB],NodeNum,NodeNum);
 AdmittanceMatrix=Y1+Y2;
-% ĞÎ³ÉÃ¿ÌõÏßÂ·µÄµçµ¼gºÍµçÄÉb
-Conductanceij=sparse([LineI;LineJ],[LineJ;LineI],[real(LineY);real(LineY)],NodeNum,NodeNum);   %µçµ¼g
-Susceptanceij=sparse([LineI;LineJ],[LineJ;LineI],[imag(LineY);imag(LineY)],NodeNum,NodeNum);   %µçÄÉb
-% ĞÎ³ÉÏà½Ç²îÏµÊı¾ØÕó
+% å½¢æˆæ¯æ¡çº¿è·¯çš„ç”µå¯¼gå’Œç”µçº³b
+Conductanceij=sparse([LineI;LineJ],[LineJ;LineI],[real(LineY);real(LineY)],NodeNum,NodeNum);   %ç”µå¯¼g
+Susceptanceij=sparse([LineI;LineJ],[LineJ;LineI],[imag(LineY);imag(LineY)],NodeNum,NodeNum);   %ç”µçº³b
+% å½¢æˆç›¸è§’å·®ç³»æ•°çŸ©é˜µ
 DeffTheta=sparse([LineI;LineJ],[LineJ;LineI],[NodeTheta(LineI)-NodeTheta(LineJ);NodeTheta(LineJ)-NodeTheta(LineI)],NodeNum,NodeNum);
 DeffIniTheta=sparse([LineI;LineJ],[LineJ;LineI],[NodeIniTheta(LineI)-NodeIniTheta(LineJ);NodeIniTheta(LineJ)-NodeIniTheta(LineI)],NodeNum,NodeNum);
-% ĞÎ³É³õÊ¼½ÚµãµçÑ¹ÏµÊı¾ØÕó¼°µü´úµçÑ¹ÏµÊı¾ØÕó
+% å½¢æˆåˆå§‹èŠ‚ç‚¹ç”µå‹ç³»æ•°çŸ©é˜µåŠè¿­ä»£ç”µå‹ç³»æ•°çŸ©é˜µ
 MultiVoltageij=sparse([LineI;LineJ],[LineJ;LineI],[NodeIniVoltage(LineI).*NodeIniVoltage(LineJ);NodeIniVoltage(LineJ).*NodeIniVoltage(LineI)],NodeNum,NodeNum);
 VoltageijS=sparse([LineI;LineJ],[LineJ;LineI],...
            [2*(NodeIniVoltage(LineI)-NodeIniVoltage(LineJ))./(NodeIniVoltage(LineI)+NodeIniVoltage(LineJ)).*(NodeVoltageS(LineI)-NodeVoltageS(LineJ))-(NodeIniVoltage(LineI)-NodeIniVoltage(LineJ)).^2;...
             2*(NodeIniVoltage(LineJ)-NodeIniVoltage(LineI))./(NodeIniVoltage(LineI)+NodeIniVoltage(LineJ)).*(NodeVoltageS(LineJ)-NodeVoltageS(LineI))-(NodeIniVoltage(LineJ)-NodeIniVoltage(LineI)).^2],NodeNum,NodeNum);
-% ĞÎ³ÉÃ¿ÌõÏßÂ·µÄÓĞ¹¦µÈĞ§µçµ¼ºÍµÈĞ§µçÄÉ
+% å½¢æˆæ¯æ¡çº¿è·¯çš„æœ‰åŠŸç­‰æ•ˆç”µå¯¼å’Œç­‰æ•ˆç”µçº³
 EPConductanceij=Conductanceij.*cos(DeffIniTheta)+Susceptanceij.*sin(DeffIniTheta);
 EPSusceptanceij=-Conductanceij.*MultiVoltageij.*sin(DeffIniTheta)+Susceptanceij.*MultiVoltageij.*cos(DeffIniTheta);
-% ĞÎ³ÉÃ¿ÌõÏßÂ·µÄÎŞ¹¦µÈĞ§µçµ¼ºÍµÈĞ§µçÄÉ
+% å½¢æˆæ¯æ¡çº¿è·¯çš„æ— åŠŸç­‰æ•ˆç”µå¯¼å’Œç­‰æ•ˆç”µçº³
 EQConductanceij=Conductanceij.*MultiVoltageij.*cos(DeffIniTheta)+Susceptanceij.*MultiVoltageij.*sin(DeffIniTheta);
 EQSusceptanceij=-Conductanceij.*sin(DeffIniTheta)+Susceptanceij.*cos(DeffIniTheta);
 
-%% *********¹¹ÔìÔ¼Êø*********
+%% *********æ„é€ çº¦æŸ*********
 Constraints=[];
-%% *********Õı³£ÔËĞĞ×´Ì¬*********
-%% ´¢ÄÜµç³Ø³ä·ÅµçÔ¼Êø£¨¿¼ÂÇÑ¡Ö·£©
+%% *********æ­£å¸¸è¿è¡ŒçŠ¶æ€*********
+%% å‚¨èƒ½ç”µæ± å……æ”¾ç”µçº¦æŸï¼ˆè€ƒè™‘é€‰å€ï¼‰
 M=100;
-Constraints=[Constraints, 0<=InstallPowerrating(NodeI)<=InstallLocation(NodeI)*MaxPowerrating];  %ÊÇ·ñÅäÖÃµç³Ø£¬¼°ÅäÖÃµç³ØµÄ¶î¶¨ÓĞ¹¦ÉÏÏŞÔ¼Êø
-Constraints=[Constraints, 0<=InstallCapacity(NodeI)<=InstallLocation(NodeI)*MaxCapacity];        %ÊÇ·ñÅäÖÃµç³Ø£¬¼°ÅäÖÃµç³ØµÄÈİÁ¿ÉÏÏŞÔ¼Êø
-Constraints=[Constraints, 0<=BatteryDc(NodeI)<=InstallPowerrating(NodeI)];                       %µç³Ø³äµçÓĞ¹¦Ô¼Êø
-Constraints=[Constraints, 0<=BatteryCh(NodeI)<=InstallPowerrating(NodeI)];                       %µç³Ø·ÅµçÓĞ¹¦Ô¼Êø
-Constraints=[Constraints, 0<=BatteryDc(NodeI)<=M*BatteryIF(NodeI)];        %³ä·ÅµçÔ¼Êø          
-Constraints=[Constraints, 0<=BatteryCh(NodeI)<=M*(1-BatteryIF(NodeI))];    %³ä·ÅµçÔ¼Êø
+Constraints=[Constraints, 0<=InstallPowerrating(NodeI)<=InstallLocation(NodeI)*MaxPowerrating];  %æ˜¯å¦é…ç½®ç”µæ± ï¼ŒåŠé…ç½®ç”µæ± çš„é¢å®šæœ‰åŠŸä¸Šé™çº¦æŸ
+Constraints=[Constraints, 0<=InstallCapacity(NodeI)<=InstallLocation(NodeI)*MaxCapacity];        %æ˜¯å¦é…ç½®ç”µæ± ï¼ŒåŠé…ç½®ç”µæ± çš„å®¹é‡ä¸Šé™çº¦æŸ
+Constraints=[Constraints, 0<=BatteryDc(NodeI)<=InstallPowerrating(NodeI)];                       %ç”µæ± å……ç”µæœ‰åŠŸçº¦æŸ
+Constraints=[Constraints, 0<=BatteryCh(NodeI)<=InstallPowerrating(NodeI)];                       %ç”µæ± æ”¾ç”µæœ‰åŠŸçº¦æŸ
+Constraints=[Constraints, 0<=BatteryDc(NodeI)<=M*BatteryIF(NodeI)];        %å……æ”¾ç”µçº¦æŸ          
+Constraints=[Constraints, 0<=BatteryCh(NodeI)<=M*(1-BatteryIF(NodeI))];    %å……æ”¾ç”µçº¦æŸ
 Kcharge=0.9;
 Kdischarge=1.1;
 Constraints=[Constraints,  Kcharge*BatteryCh(NodeI)-Kdischarge*BatteryDc(NodeI)<=InstallCapacity(NodeI)];
 Constraints=[Constraints,  Kcharge*BatteryCh(NodeI)-Kdischarge*BatteryDc(NodeI)>=0];
-%% ¹¹Ôì½»Á÷ÏßÂ·µÄInput node ºÍ Output node£¬·½±ãÒıÓÃ
+%% æ„é€ äº¤æµçº¿è·¯çš„Input node å’Œ Output nodeï¼Œæ–¹ä¾¿å¼•ç”¨
 
 GetACBranchI=branchdata(:,1);
 GetACBranchJ=branchdata(:,2);
-EAV=ones(length(GetACBranchI),1); %À©Õ¹¸¨Öú¾ØÕó£¬·½±ãºóĞøÏòÁ¿³ÌĞò±àĞ´
-% ¹¹Ôì½»Á÷ÏßÂ·ÓĞ¹¦ÎŞ¹¦³±Á÷
+EAV=ones(length(GetACBranchI),1); %æ‰©å±•è¾…åŠ©çŸ©é˜µï¼Œæ–¹ä¾¿åç»­å‘é‡ç¨‹åºç¼–å†™
+% æ„é€ äº¤æµçº¿è·¯æœ‰åŠŸæ— åŠŸæ½®æµ
 
 PostiveBranchFlow(GetACBranchI,GetACBranchJ) =Conductanceij(GetACBranchI,GetACBranchJ).*NodeVoltageS(GetACBranchI,EAV)-...
                                               EPConductanceij(GetACBranchI,GetACBranchJ).*(NodeVoltageS(GetACBranchI,EAV)+NodeVoltageS(GetACBranchJ,EAV))/2-...
@@ -135,7 +135,7 @@ ReactiveBranchFlow(GetACBranchJ,GetACBranchI)=-Susceptanceij(GetACBranchJ,GetACB
 
 
 
-%% ¹¹Ôì½ÚµãÆ½ºâ·½³Ì-½»Á÷½Úµã
+%% æ„é€ èŠ‚ç‚¹å¹³è¡¡æ–¹ç¨‹-äº¤æµèŠ‚ç‚¹
 
 GetACNodeI=Busdata(:,1);
 for i=1:length(GetACNodeI)
@@ -143,57 +143,57 @@ for i=1:length(GetACNodeI)
     SumBij(GetACNodeI(i))=sum(imag(AdmittanceMatrix((GetACNodeI(i)),:)));
 end
 for i=1:length(GetACNodeI)
-    if GetACNodeI(i)==1  %Æ½ºâ½Úµã¶ÀÁ¢Ô¼Êø
+    if GetACNodeI(i)==1  %å¹³è¡¡èŠ‚ç‚¹ç‹¬ç«‹çº¦æŸ
       Constraints=[Constraints,sum(UnitP)+sum(BatteryDc)-sum(BatteryCh)-SumGij(GetACNodeI)*NodeVoltageS(GetACNodeI)-sum(sum(PostiveBranchFlow))==sum(NodePl)];
       Constraints=[Constraints,sum(UnitQ)+SumBij(GetACNodeI)*NodeVoltageS(GetACNodeI)-sum(sum(ReactiveBranchFlow))==sum(NodeQl)];
 %                 +ReactiveBranchFlow(ACDCconnectiondata(1,1),ACDCconnectiondata(1,2))+ReactiveBranchFlow(ACDCconnectiondata(2,1),ACDCconnectiondata(2,2))
-%                 %********************************************************ÉÏÃæÌí¼ÓÏî´æÒÉ£¬ĞèÒªÌÖÂÛ********************************************************%
+%                 %********************************************************ä¸Šé¢æ·»åŠ é¡¹å­˜ç–‘ï¼Œéœ€è¦è®¨è®º********************************************************%
       Constraints=[Constraints,  NodeVoltageS(GetACNodeI(i))<=1.05^2 , 0.95^2<=NodeVoltageS(GetACNodeI(i))];  
     else
-    Corrlbranchij=SearchNodeConnection(LineI,LineJ,GetACNodeI(i)); %»ñÈ¡Ã¿¸ö½Úµã¶ÔÓ¦µÄÖ§Â·ĞÅÏ¢
+    Corrlbranchij=SearchNodeConnection(LineI,LineJ,GetACNodeI(i)); %è·å–æ¯ä¸ªèŠ‚ç‚¹å¯¹åº”çš„æ”¯è·¯ä¿¡æ¯
     InjectionACNodeP(GetACNodeI(i))=GenOutP(GetACNodeI(i))-NodePl(GetACNodeI(i))+BatteryDc(GetACNodeI(i))-BatteryCh(GetACNodeI(i));
     InjectionACNodeQ(GetACNodeI(i))=GenOutQ(GetACNodeI(i))-NodeQl(GetACNodeI(i));   
     SumCorrlBranchACP(GetACNodeI(i))=sum(PostiveBranchFlow(GetACNodeI(i),Corrlbranchij(:,2))); 
     SumCorrlBranchACQ(GetACNodeI(i))=sum(ReactiveBranchFlow(GetACNodeI(i),Corrlbranchij(:,2))); 
-    % ½ÚµãÓĞ¹¦Æ½ºâ
+    % èŠ‚ç‚¹æœ‰åŠŸå¹³è¡¡
     Constraints=[Constraints,...
         InjectionACNodeP(GetACNodeI(i))==SumCorrlBranchACP(GetACNodeI(i))+NodeVoltageS(GetACNodeI(i))*SumGij(GetACNodeI(i))
     ];
 
-    % ½ÚµãÎŞ¹¦Æ½ºâ
+    % èŠ‚ç‚¹æ— åŠŸå¹³è¡¡
     Constraints=[Constraints,...
         InjectionACNodeQ(GetACNodeI(i))==SumCorrlBranchACQ(GetACNodeI(i))-NodeVoltageS(GetACNodeI(i))*SumBij(GetACNodeI(i))
     ];
 
-    % ½ÚµãµçÑ¹Ô¼Êø
+    % èŠ‚ç‚¹ç”µå‹çº¦æŸ
     Constraints=[Constraints,  NodeVoltageS(GetACNodeI(i))<=1.05^2 , 0.95^2<=NodeVoltageS(GetACNodeI(i))];  
     end
 end
 
 
 
-%% ·¢µç»ú×éÔ¼Êø¼¯
+%% å‘ç”µæœºç»„çº¦æŸé›†
 % AGV1=sdpvar(GenNum,1); % anxillary generator varible +
 % AGV2=sdpvar(GenNum,1); % anxillary generator varible -
 Constraints=[Constraints, GenPmin.*OperationIF1<=UnitP<=GenPmax.*OperationIF1, GenQmin.*OperationIF1<=UnitQ<=GenQmax.*OperationIF1];
 Constraints=[Constraints, UnitQ./(GenQmax-GenQmin)+AGV1-AGV2==0,  AGV1>=0, AGV2>=0];
 % Constraints=[Constraints, -1<=PostiveBranchFlow(GetACBranchI,GetACBranchJ)<=1];
 % Constraints=[Constraints, -0.5<=ReactiveBranchFlow(GetACBranchI,GetACBranchJ)<=0.5];
-%% ½»Á÷ÏßÂ·³±Á÷ÉÏÏÂÏŞÔ¼Êø¼¯
-Npart=20; %½«ÉÏ¡¢ÏÂ°ëÔ²½ØÎª20·İÏß¶Î
+%% äº¤æµçº¿è·¯æ½®æµä¸Šä¸‹é™çº¦æŸé›†
+Npart=20; %å°†ä¸Šã€ä¸‹åŠåœ†æˆªä¸º20ä»½çº¿æ®µ
 alpha=pi/6;
 beta=(pi-2*alpha)/Npart;
-M=Npart;  %ÉÏ°ëÔ²·İÊı
-N=Npart;  %ÏÂ°ëÔ²·İÊı
+M=Npart;  %ä¸ŠåŠåœ†ä»½æ•°
+N=Npart;  %ä¸‹åŠåœ†ä»½æ•°
 Smax=2;
-%**********ÉÏ°ëÔ²**********%
+%**********ä¸ŠåŠåœ†**********%
 KAU=zeros(Npart,1);KBU=zeros(Npart,1);XPAU=zeros(Npart,1);
 YPAU=zeros(Npart,1);XPBU=zeros(Npart,1);YPBU=zeros(Npart,1);
-%**********ÏÂ°ëÔ²**********%
+%**********ä¸‹åŠåœ†**********%
 KAD=zeros(Npart,1); KBD=zeros(Npart,1);XPAD=zeros(Npart,1);
 YPAD=zeros(Npart,1);XPBD=zeros(Npart,1);YPBD=zeros(Npart,1);
 
-%**********ÉÏ°ëÔ²**********%  
+%**********ä¸ŠåŠåœ†**********%  
 for i=1:M
     KAU(i)=tan(alpha+(i-1)*beta);
     KBU(i)=tan(alpha+i*beta);
@@ -201,11 +201,11 @@ for i=1:M
     YPAU(i)=1/( sqrt( 1+( 1/(KAU(i))^2 ) ) ) * Smax;
     XPBU(i)=1/( sqrt( 1+( 1/(KBU(i))^2 ) )*KBU(i) ) * Smax;
     YPBU(i)=1/( sqrt( 1+( 1/(KBU(i))^2 ) ) ) * Smax;
-    Constraints=[Constraints, ( ( YPBU(i)-YPAU(i) )/( XPBU(i)-XPAU(i) )*( ReactiveBranchFlow(GetACBranchI,GetACBranchJ) - XPAU(i) )+YPAU(i)-PostiveBranchFlow(GetACBranchI,GetACBranchJ) )>=0,... %½»Á÷Ö§Â·
+    Constraints=[Constraints, ( ( YPBU(i)-YPAU(i) )/( XPBU(i)-XPAU(i) )*( ReactiveBranchFlow(GetACBranchI,GetACBranchJ) - XPAU(i) )+YPAU(i)-PostiveBranchFlow(GetACBranchI,GetACBranchJ) )>=0,... %äº¤æµæ”¯è·¯
     ];  
 end
 
-%**********ÏÂ°ëÔ²**********%
+%**********ä¸‹åŠåœ†**********%
 
 for i=1:N
     KAD(i)=tan(-alpha-(i-1)*beta);
@@ -214,14 +214,14 @@ for i=1:N
     YPAD(i)=-1/( sqrt( 1+( 1/(KAD(i))^2 ) ) ) * Smax;
     XPBD(i)=-1/( sqrt( 1+( 1/(KBD(i))^2 ) )*KBD(i) ) * Smax;
     YPBD(i)=-1/( sqrt( 1+( 1/(KBD(i))^2 ) ) ) * Smax;
-    Constraints=[Constraints, ( ( YPBD(i)-YPAD(i) )/( XPBD(i)-XPAD(i) )*( ReactiveBranchFlow(GetACBranchI,GetACBranchJ) - XPAD(i) )+YPAD(i)-PostiveBranchFlow(GetACBranchI,GetACBranchJ) )<=0,...%½»Á÷Ö§Â·
-    ]; %½»Á÷Ö§Â·
+    Constraints=[Constraints, ( ( YPBD(i)-YPAD(i) )/( XPBD(i)-XPAD(i) )*( ReactiveBranchFlow(GetACBranchI,GetACBranchJ) - XPAD(i) )+YPAD(i)-PostiveBranchFlow(GetACBranchI,GetACBranchJ) )<=0,...%äº¤æµæ”¯è·¯
+    ]; %äº¤æµæ”¯è·¯
 end
 
-%% Ä¿±ê³É±¾º¯Êı
-CPV=18.95;   %ÓĞ¹¦³É±¾ °Ù$/kW
-CEV=9.01;    %ÈİÁ¿³É±¾ °Ù$/kWh
-OMC=0.132;   %ÔËĞĞ³É±¾ °Ù$/kW
+%% ç›®æ ‡æˆæœ¬å‡½æ•°
+CPV=18.95;   %æœ‰åŠŸæˆæœ¬ ç™¾$/kW
+CEV=9.01;    %å®¹é‡æˆæœ¬ ç™¾$/kWh
+OMC=0.132;   %è¿è¡Œæˆæœ¬ ç™¾$/kW
 InstallCost=sum(CPV*InstallPowerrating)+sum(CEV*InstallCapacity);
 OPM=sum(OMC*(BatteryDc)+OMC*(BatteryCh));
 Obj1=InstallCost;
