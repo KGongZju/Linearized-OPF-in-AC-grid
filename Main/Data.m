@@ -1,5 +1,5 @@
 function [Busdata,Gendata,branchdata,Gencostdata]=Data()
-%Database Êý¾Ý
+%Database ÃŠÄ±Â¾Ä°
 %% DC AC bus data
 %bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
 Busdata=[
