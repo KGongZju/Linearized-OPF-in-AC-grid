@@ -1,20 +1,20 @@
-%% ¶ÁÈ¡ÏßÂ·ĞÅÏ¢
+%% è¯»å–çº¿è·¯ä¿¡æ¯
 clear;clc;
 [Busdata,Gendata,branchdata,Gencostdata]=Data();
-% ÏßÂ·ĞÅÏ¢
+% çº¿è·¯ä¿¡æ¯
 LineI=branchdata(:,1);
 LineJ=branchdata(:,2);
 LineR=branchdata(:,3);
 LineX=branchdata(:,4);
 LineB=branchdata(:,5);
 LineNum=length(LineI);
-% ½ÚµãĞÅÏ¢
+% èŠ‚ç‚¹ä¿¡æ¯
 NodeI=Busdata(:,1);
 NodeNum=length(NodeI);
-% ·¢µç»úĞÅÏ¢
+% å‘ç”µæœºä¿¡æ¯
 GenI=Gendata(:,1);
 
-%% ³õÊ¼»¯
+%% åˆå§‹åŒ–
 IniPostiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[ones(LineNum,1);-ones(LineNum,1)],NodeNum,NodeNum);
 IniReactiveBranchFlow=sparse([LineI;LineJ],[LineJ,LineI],[zeros(LineNum,1);zeros(LineNum,1)],NodeNum,NodeNum);
 NodeIniVoltage=ones(NodeNum,1);
@@ -22,13 +22,13 @@ NodeIniTheta=zeros(NodeNum,1);
 DNodeIniVoltage=zeros(NodeNum,1);
 
 
-%% Ê×´Î´øÈë
+%% é¦–æ¬¡å¸¦å…¥
 [PostiveBranchFlow,ReactiveBranchFlow,NodeVoltageS,DNodeVoltageS,NodeTheta,BatteryCh,BatteryDc,DBatteryCh,DBatteryDc,VIMultiDVI]=...
           FormulationDeclear(IniPostiveBranchFlow,IniReactiveBranchFlow,NodeIniVoltage,NodeIniTheta,DNodeIniVoltage);
         
 DNodeIniVoltage=sqrt(DNodeVoltageS+NodeVoltageS+2*VIMultiDVI)-sqrt(NodeVoltageS);
 
-%% ´øÈëµÚ¶ş´Î½â
+%% å¸¦å…¥ç¬¬äºŒæ¬¡è§£
 IniPostiveBranchFlow=PostiveBranchFlow;
 IniReactiveBranchFlow=ReactiveBranchFlow;
 NodeIniVoltage=sqrt(NodeVoltageS);
@@ -40,8 +40,8 @@ NodeIniTheta=NodeTheta;
 
 
 
-%% ¼ÆËãÆ«²î
-ACN=[branchdata(:,1) branchdata(:,2)]; %¶ÁÈ¡ÏßÂ·½ÚµãĞÅÏ¢
+%% è®¡ç®—åå·®
+ACN=[branchdata(:,1) branchdata(:,2)]; %è¯»å–çº¿è·¯èŠ‚ç‚¹ä¿¡æ¯
 for iteration=1:100
 for i=1:length(ACN(:,1))
     PQ(i)=PQS(PostiveBranchFlow(ACN(i,1),ACN(i,2)),ReactiveBranchFlow(ACN(i,1),ACN(i,2)));
@@ -52,12 +52,12 @@ for i=1:length(ACN(:,1))
     DeltaPQ(i,iteration)=abs(PQ(i)-PQS(IniPostiveBranchFlow(ACN(i,1),ACN(i,2)),IniReactiveBranchFlow(ACN(i,1),ACN(i,2))))/MAXPQ;
 end   
 
-% ÅĞ¶ÏÊÕÁ²Ìõ¼ş
+% åˆ¤æ–­æ”¶æ•›æ¡ä»¶
    if DeltaPQ(:,iteration)<=0.01
-      fprintf('µü´ú½áÊø£¬ÊÕÁ²Íê±Ï\n'); break
+      fprintf('è¿­ä»£ç»“æŸï¼Œæ”¶æ•›å®Œæ¯•\n'); break
    else
-   IniPostiveBranchFlow=PostiveBranchFlow;   %¸üĞÂ³õÊ¼µü´úµã
-   IniReactiveBranchFlow=ReactiveBranchFlow; %¸üĞÂ³õÊ¼µü´úµã
+   IniPostiveBranchFlow=PostiveBranchFlow;   %æ›´æ–°åˆå§‹è¿­ä»£ç‚¹
+   IniReactiveBranchFlow=ReactiveBranchFlow; %æ›´æ–°åˆå§‹è¿­ä»£ç‚¹
 % NodeIniVoltage=sqrt(NodeVoltageS);
 % NodeIniTheta=NodeTheta;
    DNodeIniVoltage=sqrt(DNodeVoltageS+NodeVoltageS+2*VIMultiDVI)-sqrt(NodeVoltageS);
