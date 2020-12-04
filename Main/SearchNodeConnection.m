@@ -1,7 +1,7 @@
 function SearchofIJ=SearchNodeConnection(I,J,PvI)
-SortofIJ=[I,J;J,I];      %ÏßÂ·Á¬½Ó¹ØÏµ
+SortofIJ=[I,J;J,I];      %çº¿è·¯è¿æ¥å…³ç³»
 SearchofIJ=[];
-for i=1:length(PvI)  %ËÑË÷ºÍ·¢µç»ú½ÚµãÁ¬½ÓµÄÏßÂ·×éºÏ
+for i=1:length(PvI)  %æœç´¢å’Œå‘ç”µæœºèŠ‚ç‚¹è¿æ¥çš„çº¿è·¯ç»„åˆ
     SearchofIJ=[SearchofIJ;SortofIJ(SortofIJ(:,1)==PvI(i),:)];    
 end
 SearchofIJ=unique(SearchofIJ,'rows');
