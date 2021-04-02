@@ -1,4 +1,6 @@
 %% 读取线路信息
+% % % % % You are free to use this code but we do not provide any service for this code % % % % %
+
 clear;clc;
 [Busdata,Gendata,branchdata,Gencostdata]=Data();
 % 线路信息
