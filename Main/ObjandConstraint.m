@@ -13,7 +13,7 @@ LineI=branchdata(:,1);
 LineJ=branchdata(:,2);
 LineR=branchdata(:,3);
 LineX=branchdata(:,4);
-LineB=branchdata(:,5);
+LineB=branchdata(:,5)/2;
 LineNum=length(LineI);
 
 % 节点信息
@@ -84,7 +84,7 @@ DeffIniTheta=sparse([LineI;LineJ],[LineJ;LineI],[NodeIniTheta(LineI)-NodeIniThet
 MultiVoltageij=sparse([LineI;LineJ],[LineJ;LineI],[NodeIniVoltage(LineI).*NodeIniVoltage(LineJ);NodeIniVoltage(LineJ).*NodeIniVoltage(LineI)],NodeNum,NodeNum);
 VoltageijS=sparse([LineI;LineJ],[LineJ;LineI],...
            [2*(NodeIniVoltage(LineI)-NodeIniVoltage(LineJ))./(NodeIniVoltage(LineI)+NodeIniVoltage(LineJ)).*(NodeVoltageS(LineI)-NodeVoltageS(LineJ))-(NodeIniVoltage(LineI)-NodeIniVoltage(LineJ)).^2;...
-            2*(NodeIniVoltage(LineJ)-NodeIniVoltage(LineI))./(NodeIniVoltage(LineI)+NodeIniVoltage(LineJ)).*(NodeVoltageS(LineJ)-NodeVoltageS(LineI))-(NodeIniVoltage(LineJ)-NodeIniVoltage(LineI)).^2],NodeNum,NodeNum);
+            2*(NodeIniVoltage(LineJ)-NodeIniVoltage(LineI))./(NodeIniVoltage(LineJ)+NodeIniVoltage(LineI)).*(NodeVoltageS(LineJ)-NodeVoltageS(LineI))-(NodeIniVoltage(LineJ)-NodeIniVoltage(LineI)).^2],NodeNum,NodeNum);
 % 形成每条线路的有功等效电导和等效电纳
 EPConductanceij=Conductanceij.*cos(DeffIniTheta)+Susceptanceij.*sin(DeffIniTheta);
 EPSusceptanceij=-Conductanceij.*MultiVoltageij.*sin(DeffIniTheta)+Susceptanceij.*MultiVoltageij.*cos(DeffIniTheta);
@@ -111,28 +111,36 @@ Constraints=[Constraints,  Kcharge*BatteryCh(NodeI)-Kdischarge*BatteryDc(NodeI)>
 
 GetACBranchI=branchdata(:,1);
 GetACBranchJ=branchdata(:,2);
-EAV=ones(length(GetACBranchI),1); %扩展辅助矩阵，方便后续向量程序编写
 % 构造交流线路有功无功潮流
+for i=1:length(LineI)
+    Constraints=[Constraints, VoltageijS(LineI(i),LineJ(i))>=0];
+end
 
-PostiveBranchFlow(GetACBranchI,GetACBranchJ) =Conductanceij(GetACBranchI,GetACBranchJ).*NodeVoltageS(GetACBranchI,EAV)-...
-                                              EPConductanceij(GetACBranchI,GetACBranchJ).*(NodeVoltageS(GetACBranchI,EAV)+NodeVoltageS(GetACBranchJ,EAV))/2-...
-                                              EPSusceptanceij(GetACBranchI,GetACBranchJ).*(DeffTheta(GetACBranchI,GetACBranchJ)-DeffIniTheta(GetACBranchI,GetACBranchJ))+...
-                                              EPConductanceij(GetACBranchI,GetACBranchJ).*VoltageijS(GetACBranchI,GetACBranchJ)/2;
-PostiveBranchFlow(GetACBranchJ,GetACBranchI) =Conductanceij(GetACBranchJ,GetACBranchI).*NodeVoltageS(GetACBranchJ,EAV)-...
-                                              EPConductanceij(GetACBranchJ,GetACBranchI).*(NodeVoltageS(GetACBranchI,EAV)+NodeVoltageS(GetACBranchJ,EAV))/2-...
-                                              EPSusceptanceij(GetACBranchJ,GetACBranchI).*(DeffTheta(GetACBranchJ,GetACBranchI)-DeffIniTheta(GetACBranchJ,GetACBranchI))+...
-                                              EPConductanceij(GetACBranchJ,GetACBranchI).*VoltageijS(GetACBranchJ,GetACBranchI)/2;
+for i=1:length(GetACBranchI)
+Constraints=[Constraints,...
+PostiveBranchFlow(GetACBranchI(i),GetACBranchJ(i)) ==Conductanceij(GetACBranchI(i),GetACBranchJ(i)).*NodeVoltageS(GetACBranchI(i))-...
+                                              EPConductanceij(GetACBranchI(i),GetACBranchJ(i)).*(NodeVoltageS(GetACBranchI(i))+NodeVoltageS(GetACBranchJ(i)))/2-...
+                                              EPSusceptanceij(GetACBranchI(i),GetACBranchJ(i)).*(DeffTheta(GetACBranchI(i),GetACBranchJ(i))-DeffIniTheta(GetACBranchI(i),GetACBranchJ(i)))+...
+                                              EPConductanceij(GetACBranchI(i),GetACBranchJ(i)).*VoltageijS(GetACBranchI(i),GetACBranchJ(i))/2;];
+Constraints=[Constraints,...                                              
+PostiveBranchFlow(GetACBranchJ(i),GetACBranchI(i)) ==Conductanceij(GetACBranchJ(i),GetACBranchI(i)).*NodeVoltageS(GetACBranchJ(i))-...
+                                              EPConductanceij(GetACBranchJ(i),GetACBranchI(i)).*(NodeVoltageS(GetACBranchI(i))+NodeVoltageS(GetACBranchJ(i)))/2-...
+                                              EPSusceptanceij(GetACBranchJ(i),GetACBranchI(i)).*(DeffTheta(GetACBranchJ(i),GetACBranchI(i))-DeffIniTheta(GetACBranchJ(i),GetACBranchI(i)))+...
+                                              EPConductanceij(GetACBranchJ(i),GetACBranchI(i)).*VoltageijS(GetACBranchJ(i),GetACBranchI(i))/2;];
 
-ReactiveBranchFlow(GetACBranchI,GetACBranchJ)=-Susceptanceij(GetACBranchI,GetACBranchJ).*NodeVoltageS(GetACBranchI,EAV)+...
-                                              EQSusceptanceij(GetACBranchI,GetACBranchJ).*(NodeVoltageS(GetACBranchI,EAV)+NodeVoltageS(GetACBranchJ,EAV))/2-...
-                                              EQConductanceij(GetACBranchI,GetACBranchJ).*(DeffTheta(GetACBranchI,GetACBranchJ)-DeffIniTheta(GetACBranchI,GetACBranchJ))-...
-                                              EQSusceptanceij(GetACBranchI,GetACBranchJ).*VoltageijS(GetACBranchI,GetACBranchJ)/2;
-ReactiveBranchFlow(GetACBranchJ,GetACBranchI)=-Susceptanceij(GetACBranchJ,GetACBranchI).*NodeVoltageS(GetACBranchJ,EAV)+...
-                                              EQSusceptanceij(GetACBranchJ,GetACBranchI).*(NodeVoltageS(GetACBranchI,EAV)+NodeVoltageS(GetACBranchJ,EAV))/2-...
-                                              EQConductanceij(GetACBranchJ,GetACBranchI).*(DeffTheta(GetACBranchJ,GetACBranchI)-DeffIniTheta(GetACBranchJ,GetACBranchI))-...
-                                              EQSusceptanceij(GetACBranchJ,GetACBranchI).*VoltageijS(GetACBranchJ,GetACBranchI)/2;
+Constraints=[Constraints,...                                          
+ReactiveBranchFlow(GetACBranchI(i),GetACBranchJ(i))==-Susceptanceij(GetACBranchI(i),GetACBranchJ(i)).*NodeVoltageS(GetACBranchI(i))+...
+                                              EQSusceptanceij(GetACBranchI(i),GetACBranchJ(i)).*(NodeVoltageS(GetACBranchI(i))+NodeVoltageS(GetACBranchJ(i)))/2-...
+                                              EQConductanceij(GetACBranchI(i),GetACBranchJ(i)).*(DeffTheta(GetACBranchI(i),GetACBranchJ(i))-DeffIniTheta(GetACBranchI(i),GetACBranchJ(i)))-...
+                                              EQSusceptanceij(GetACBranchI(i),GetACBranchJ(i)).*VoltageijS(GetACBranchI(i),GetACBranchJ(i))/2;];
+                                          
+Constraints=[Constraints,...                                          
+ReactiveBranchFlow(GetACBranchJ(i),GetACBranchI(i))==-Susceptanceij(GetACBranchJ(i),GetACBranchI(i)).*NodeVoltageS(GetACBranchJ(i))+...
+                                              EQSusceptanceij(GetACBranchJ(i),GetACBranchI(i)).*(NodeVoltageS(GetACBranchI(i))+NodeVoltageS(GetACBranchJ(i)))/2-...
+                                              EQConductanceij(GetACBranchJ(i),GetACBranchI(i)).*(DeffTheta(GetACBranchJ(i),GetACBranchI(i))-DeffIniTheta(GetACBranchJ(i),GetACBranchI(i)))-...
+                                              EQSusceptanceij(GetACBranchJ(i),GetACBranchI(i)).*VoltageijS(GetACBranchJ(i),GetACBranchI(i))/2;];
 
-
+end
 
 
 %% 构造节点平衡方程-交流节点
@@ -140,16 +148,16 @@ ReactiveBranchFlow(GetACBranchJ,GetACBranchI)=-Susceptanceij(GetACBranchJ,GetACB
 GetACNodeI=Busdata(:,1);
 for i=1:length(GetACNodeI)
     SumGij(GetACNodeI(i))=sum(real(AdmittanceMatrix((GetACNodeI(i)),:)));
-    SumBij(GetACNodeI(i))=sum(imag(AdmittanceMatrix((GetACNodeI(i)),:)));
+    SumBij(GetACNodeI(i))=sum(-imag(AdmittanceMatrix((GetACNodeI(i)),:)));
 end
 for i=1:length(GetACNodeI)
-    if GetACNodeI(i)==1  %平衡节点独立约束
-      Constraints=[Constraints,sum(UnitP)+sum(BatteryDc)-sum(BatteryCh)-SumGij(GetACNodeI)*NodeVoltageS(GetACNodeI)-sum(sum(PostiveBranchFlow))==sum(NodePl)];
-      Constraints=[Constraints,sum(UnitQ)+SumBij(GetACNodeI)*NodeVoltageS(GetACNodeI)-sum(sum(ReactiveBranchFlow))==sum(NodeQl)];
-%                 +ReactiveBranchFlow(ACDCconnectiondata(1,1),ACDCconnectiondata(1,2))+ReactiveBranchFlow(ACDCconnectiondata(2,1),ACDCconnectiondata(2,2))
-%                 %********************************************************上面添加项存疑，需要讨论********************************************************%
-      Constraints=[Constraints,  NodeVoltageS(GetACNodeI(i))<=1.05^2 , 0.95^2<=NodeVoltageS(GetACNodeI(i))];  
-    else
+%     if GetACNodeI(i)==1  %平衡节点独立约束
+%       Constraints=[Constraints,sum(UnitP)+sum(BatteryDc)-sum(BatteryCh)-SumGij(GetACNodeI)*NodeVoltageS(GetACNodeI)-sum(sum(PostiveBranchFlow))==sum(NodePl)];
+%       Constraints=[Constraints,sum(UnitQ)+SumBij(GetACNodeI)*NodeVoltageS(GetACNodeI)-sum(sum(ReactiveBranchFlow))==sum(NodeQl)];
+% %                 +ReactiveBranchFlow(ACDCconnectiondata(1,1),ACDCconnectiondata(1,2))+ReactiveBranchFlow(ACDCconnectiondata(2,1),ACDCconnectiondata(2,2))
+% %                 %********************************************************上面添加项存疑，需要讨论********************************************************%
+%       Constraints=[Constraints,  NodeVoltageS(GetACNodeI(i))<=1.05^2 , 0.95^2<=NodeVoltageS(GetACNodeI(i))];  
+%     else
     Corrlbranchij=SearchNodeConnection(LineI,LineJ,GetACNodeI(i)); %获取每个节点对应的支路信息
     InjectionACNodeP(GetACNodeI(i))=GenOutP(GetACNodeI(i))-NodePl(GetACNodeI(i))+BatteryDc(GetACNodeI(i))-BatteryCh(GetACNodeI(i));
     InjectionACNodeQ(GetACNodeI(i))=GenOutQ(GetACNodeI(i))-NodeQl(GetACNodeI(i));   
@@ -162,12 +170,12 @@ for i=1:length(GetACNodeI)
 
     % 节点无功平衡
     Constraints=[Constraints,...
-        InjectionACNodeQ(GetACNodeI(i))==SumCorrlBranchACQ(GetACNodeI(i))-NodeVoltageS(GetACNodeI(i))*SumBij(GetACNodeI(i))
+        InjectionACNodeQ(GetACNodeI(i))==SumCorrlBranchACQ(GetACNodeI(i))+NodeVoltageS(GetACNodeI(i))*SumBij(GetACNodeI(i))
     ];
 
     % 节点电压约束
     Constraints=[Constraints,  NodeVoltageS(GetACNodeI(i))<=1.05^2 , 0.95^2<=NodeVoltageS(GetACNodeI(i))];  
-    end
+%     end
 end
 
 
@@ -175,17 +183,17 @@ end
 %% 发电机组约束集
 % AGV1=sdpvar(GenNum,1); % anxillary generator varible +
 % AGV2=sdpvar(GenNum,1); % anxillary generator varible -
-Constraints=[Constraints, GenPmin.*OperationIF1<=UnitP<=GenPmax.*OperationIF1, GenQmin.*OperationIF1<=UnitQ<=GenQmax.*OperationIF1];
+Constraints=[Constraints, GenPmin<=UnitP, UnitP<=GenPmax, GenQmin<=UnitQ, UnitQ<=GenQmax];
 Constraints=[Constraints, UnitQ./(GenQmax-GenQmin)+AGV1-AGV2==0,  AGV1>=0, AGV2>=0];
 % Constraints=[Constraints, -1<=PostiveBranchFlow(GetACBranchI,GetACBranchJ)<=1];
 % Constraints=[Constraints, -0.5<=ReactiveBranchFlow(GetACBranchI,GetACBranchJ)<=0.5];
 %% 交流线路潮流上下限约束集
-Npart=20; %将上、下半圆截为20份线段
-alpha=pi/6;
+Npart=30; %将上、下半圆截为20份线段
+alpha=pi/30; %6度
 beta=(pi-2*alpha)/Npart;
 M=Npart;  %上半圆份数
 N=Npart;  %下半圆份数
-Smax=2;
+Smax=1;
 %**********上半圆**********%
 KAU=zeros(Npart,1);KBU=zeros(Npart,1);XPAU=zeros(Npart,1);
 YPAU=zeros(Npart,1);XPBU=zeros(Npart,1);YPBU=zeros(Npart,1);
@@ -225,6 +233,6 @@ OMC=0.132;   %运行成本 百$/kW
 InstallCost=sum(CPV*InstallPowerrating)+sum(CEV*InstallCapacity);
 OPM=sum(OMC*(BatteryDc)+OMC*(BatteryCh));
 Obj1=InstallCost;
-Obj2=GenA'*UnitP+sum(AGV1+AGV2)+OPM;
+Obj2=GenA'*UnitP.^2+sum(AGV1+AGV2);
 Obj3=0;
 end
